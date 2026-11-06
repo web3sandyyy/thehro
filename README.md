@@ -1,75 +1,35 @@
-# React + TypeScript + Vite
+# Thehro (ठहरो)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Thehro means “pause” or “wait” in Hindi: take a moment to check whether a higher APY is worth the cost of moving.
 
-Currently, two official plugins are available:
+**Is chasing that APY worth it?** Thehro compares the dollars you would earn by keeping a USDC position against moving it after fees, and shows the break-even day.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Built for **Arkiv — Build on Arkiv (from scratch)** at ETHGlobal Mumbai 2026.
 
-## React Compiler
+## Run
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Requires Node.js 22.10+ and npm.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+npm ci
+npm run dev
+npm test
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+This version ships the calculator with three clearly labeled illustrative scenarios. Live markets and Arkiv receipts are coming next.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Math
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+For principal `P`, one-time switching cost `C`, current effective annual yield `a`, target yield `b`, and days `d`:
 
+```text
+Stay ending balance = P × (1+a)^(d/365)
+Move ending balance = (P−C) × (1+b)^(d/365)
+Net advantage = Move − Stay
+Break-even days = 365 × ln(P/(P−C)) / (ln(1+b) − ln(1+a))
 ```
+
+Break-even exists for positive costs only when `b > a`. Rates are held constant, USDC is assumed to stay at $1, and taxes, lockups and protocol risk are not modeled.
+
+Licensed MIT.
