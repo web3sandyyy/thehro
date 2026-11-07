@@ -1,13 +1,3 @@
-<<<<<<< Updated upstream
-import { createIcons, ArrowUpRight, ArrowRight, ArrowLeftRight, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Leaf, SlidersHorizontal, CircleDollarSign, TrendingUp, Download, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, TriangleAlert } from 'lucide';
-import { compare, chartPoints, outcome, FEE_KEYS } from './math.js';
-import { examples, fetchPools, prettyProject, filterPools, manualPool, poolLink, poolWarnings } from './data.js';
-import { effectiveRate, cleanScenario, restoreScenario, parseScenario, encodeScenario, decodeScenario } from './scenario.js';
-import { readDraft, writeDraft, clearDraft } from './storage.js';
-import './style.css';
-
-const iconSet = { ArrowUpRight, ArrowRight, ArrowLeftRight, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Leaf, SlidersHorizontal, CircleDollarSign, TrendingUp, Download, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, TriangleAlert };
-=======
 import { createIcons, ArrowUpRight, ArrowRight, ArrowLeftRight, Wallet, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Bookmark, Leaf, SlidersHorizontal, FileClock, CircleDollarSign, TrendingUp, Download, Trash2, Copy, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, Smartphone, TriangleAlert } from 'lucide';
 import { compare, chartPoints, outcome, FEE_KEYS, LIFETIMES } from './math.js';
 import { examples, fetchPools, prettyProject, filterPools, manualPool, poolLink, poolWarnings } from './data.js';
@@ -18,35 +8,22 @@ import { readDraft, writeDraft, clearDraft } from './storage.js';
 import './style.css';
 
 const iconSet = { ArrowUpRight, ArrowRight, ArrowLeftRight, Wallet, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Bookmark, Leaf, SlidersHorizontal, FileClock, CircleDollarSign, TrendingUp, Download, Trash2, Copy, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, Smartphone, TriangleAlert };
->>>>>>> Stashed changes
 const $ = (selector) => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = (name, cls='') => `<i data-lucide="${name}" class="${cls}" aria-hidden="true"></i>`;
 const money = value => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(value);
 const compact = value => new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:1}).format(value);
 const pct = value => `${value.toFixed(2)}%`;
-<<<<<<< Updated upstream
-const PAGE_SIZE = 40;
-const FEE_LABELS = {withdrawal:'Withdrawal',gas:'Gas',bridge:'Bridge',entry:'Entry / deposit',slippage:'Slippage'};
-=======
 const shortAddress = value => `${value.slice(0,6)}…${value.slice(-4)}`;
 const PAGE_SIZE = 40, RECEIPT_PAGE = 24;
 const FEE_LABELS = {withdrawal:'Withdrawal',gas:'Gas',bridge:'Bridge',entry:'Entry / deposit',slippage:'Slippage'};
 const LIFETIME_LABELS = {2:'2 minutes — quick expiry demo',15:'15 minutes',30:'30 minutes',60:'1 hour',1440:'1 day',10080:'7 days'};
->>>>>>> Stashed changes
 const DEFAULT_INPUTS = {amount:5000,currentApy:4.2,days:30,cost:18};
 
 const state = {
   view:'markets', inputs:{...DEFAULT_INPUTS}, selected:examples[1],
   excludeRewards:false, rateMode:'reported', rateHaircut:0, fees:null,
   pools:[], fetchedAt:null, loading:false, dataError:'', search:'', chain:'All networks', sort:'tvl', marketPage:0,
-<<<<<<< Updated upstream
-  modal:null, toast:null, restoredSource:null, selectedFetchedAt:null,
-  remember:false, importError:'',
-};
-let toastTimeout, announceTimer, persistTimer, modalOpener=null, marketsInFlight=false;
-const MARKET_REFRESH_MS=5*60*1000;
-=======
   wallet:null, provider:null, connecting:false, receipts:[], receiptsLoading:false, receiptError:'', receiptsLoadedAt:null,
   receiptOffset:0, receiptsMore:false, receiptsSkipped:0,
   busy:false, modal:null, toast:null, lastTx:null, lastSaved:null, restoredSource:null, selectedFetchedAt:null,
@@ -55,7 +32,6 @@ const MARKET_REFRESH_MS=5*60*1000;
 let toastTimeout, announceTimer, persistTimer, pendingHint, readEpoch=0, connectionEpoch=0, modalEpoch=0, modalOpener=null, providerCleanup=()=>{}, lastAutoRefresh=0, marketsInFlight=false;
 const MARKET_REFRESH_MS=5*60*1000;
 const walletDiscovery=discoverWallets();
->>>>>>> Stashed changes
 document.body.insertAdjacentHTML('beforeend','<div id="modal-root"></div><div id="toast" aria-live="polite"></div>');
 
 function decorate() { createIcons({icons:iconSet,attrs:{'stroke-width':1.65}}); }
@@ -73,17 +49,10 @@ function sourceLabel() {
   return `Retrieved ${new Date(source.fetchedAt).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})} · ${Math.max(0,Math.floor((Date.now()-source.fetchedAt)/60000))}m ago`;
 }
 function defaultName() { return `${state.selected.manual?'My target':prettyProject(state.selected.project)} · ${state.inputs.days} days`; }
-<<<<<<< Updated upstream
-function buildScenario(name=defaultName()) {
-  return cleanScenario({ version:2, name, inputs:inputs(), source:provenance(), pool:{...state.selected},
-    excludeRewards:state.excludeRewards, rateMode:state.rateMode, rateHaircut:state.rateHaircut, fees:state.fees,
-    savedAt:Date.now(), lifetimeMinutes:30 });
-=======
 function buildScenario(name=defaultName(), minutes=state.saveDraft.minutes) {
   return cleanScenario({ version:2, name, inputs:inputs(), source:provenance(), pool:{...state.selected},
     excludeRewards:state.excludeRewards, rateMode:state.rateMode, rateHaircut:state.rateHaircut, fees:state.fees,
     savedAt:Date.now(), lifetimeMinutes:minutes });
->>>>>>> Stashed changes
 }
 function applyScenario(scenario) {
   const r=restoreScenario(scenario);
@@ -112,15 +81,6 @@ function render({focus}={}) {
     <header class="header"><div class="header-inner">
       <a class="brand" href="#" aria-label="Thehro home"><span class="brand-icon">${icon('arrow-up-right')}</span>thehro<span class="brand-dot">.</span></a>
       <nav class="nav" aria-label="Main navigation">
-<<<<<<< Updated upstream
-        ${[['compare','Compare'],['markets','Markets']].map(([v,label])=>`<button data-view="${v}" class="${state.view===v?'active':''}" ${state.view===v?'aria-current="page"':''}>${label}${v==='markets'?' <span class="nav-dot"></span>':''}</button>`).join('')}
-      </nav>
-      <span></span>
-    </div></header>
-    <main class="shell" id="main">
-      ${state.view==='compare'?comparePage():marketsPage()}
-      <footer class="footer"><span><span class="footer-mark">✳</span> Built for a little more clarity.</span><div><button id="methodology">How the math works ${icon('arrow-up-right')}</button></div></footer>
-=======
         ${[['compare','Compare'],['markets','Markets'],['receipts','My receipts']].map(([v,label])=>`<button data-view="${v}" class="${state.view===v?'active':''}" ${state.view===v?'aria-current="page"':''}>${label}${v==='markets'?' <span class="nav-dot"></span>':''}</button>`).join('')}
       </nav>
       <button class="wallet-button" id="connect" ${state.connecting?'aria-busy="true"':''}>${icon(state.connecting?'loader-circle':'wallet',state.connecting?'spin':'')}<span>${state.wallet?esc(shortAddress(state.wallet)):state.connecting?'Check your wallet…':'Connect wallet'}</span></button>
@@ -128,7 +88,6 @@ function render({focus}={}) {
     <main class="shell" id="main">
       ${state.view==='compare'?comparePage():state.view==='markets'?marketsPage():receiptsPage()}
       <footer class="footer"><span><span class="footer-mark">✳</span> Built for a little more clarity.</span><div><button id="methodology">How the math works ${icon('arrow-up-right')}</button><span class="footer-divider"></span><span>Receipts on <a href="https://arkiv.network" target="_blank" rel="noopener noreferrer">[ ARKIV ]</a></span></div></footer>
->>>>>>> Stashed changes
     </main>`;
   decorate(); bind(); renderToast();
   if(focusSelector&&!state.modal)$(focusSelector)?.focus({preventScroll:true});
@@ -189,12 +148,8 @@ function comparePage() {
       ${poolDetails()}
       <div class="target-bottom"><div id="rate-breakdown"><span class="legend-dot base"></span>Base ${s.base==null?'unknown':pct(s.base)} <span class="legend-dot reward"></span>Rewards ${s.reward==null?'unknown':pct(s.reward)}</div><label class="toggle"><input id="exclude-rewards" type="checkbox" ${state.excludeRewards?'checked':''} ${s.base==null?'disabled':''}><span class="toggle-track"></span>Exclude rewards</label></div>${rateControls()}</div>
       <div id="results">${resultsMarkup()}</div><div id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-<<<<<<< Updated upstream
-    </section></div>`;
-=======
     </section></div>
     <div class="bottom-note"><span class="pill-icon">${icon('file-clock')}</span><div><h3>Good decisions deserve a timestamp.</h3><p>Save your inputs and rates as a wallet-owned receipt on Arkiv, or export them as a file without a wallet.</p></div><button id="save-bottom" class="outline-button">Save comparison ${icon('bookmark')}</button></div>`;
->>>>>>> Stashed changes
 }
 
 function verdictCopy(advantage) {
@@ -263,11 +218,6 @@ function marketListMarkup() {
     <p class="table-note"><span>${filtered.length===state.pools.length?`All ${state.pools.length} matching pools.`:`${filtered.length} of ${state.pools.length} pools match your filters.`}</span><a href="https://defillama.com/yields" target="_blank" rel="noopener noreferrer">Source: DeFiLlama ${icon('external-link')}</a></p>`;
 }
 
-<<<<<<< Updated upstream
-function bind() {
-  $('.brand').addEventListener('click',e=>{e.preventDefault();navigate('compare');});
-  document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.view)));
-=======
 function expiryLabel(r) {
   if(r.estimatedExpiresAt==null)return `Expires at block ${r.expiresAtBlock}`;
   const left=r.estimatedExpiresAt-Date.now();
@@ -295,7 +245,6 @@ function bind() {
   document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.view)));
   $('#connect')?.addEventListener('click',e=>connect(e.currentTarget));
   $('#connect-receipts')?.addEventListener('click',e=>connect(e.currentTarget));
->>>>>>> Stashed changes
   $('#methodology')?.addEventListener('click',e=>openModal('methodology',e.currentTarget));
   for(const [id,key] of [['amount','amount'],['current-apy','currentApy'],['cost','cost'],['days','days'],['custom-days','days']]) {
     $(`#${id}`)?.addEventListener('input',event=>{
@@ -309,11 +258,8 @@ function bind() {
   document.querySelectorAll('[data-amount]').forEach(el=>el.addEventListener('click',()=>{state.inputs.amount=Number(el.dataset.amount);render();persist();}));
   document.querySelectorAll('[data-days]').forEach(el=>el.addEventListener('click',()=>{state.inputs.days=Number(el.dataset.days);render();persist();}));
   $('#exclude-rewards')?.addEventListener('change',e=>{state.excludeRewards=e.target.checked;if(state.excludeRewards)state.rateMode='reported';render();persist();});
-<<<<<<< Updated upstream
-=======
   $('#save-bottom')?.addEventListener('click',e=>openSave(e.currentTarget));
   bindResults();
->>>>>>> Stashed changes
   $('#load-markets')?.addEventListener('click',loadMarkets);
   $('#market-search')?.addEventListener('input',e=>{state.search=e.target.value;state.marketPage=0;refreshMarketList();});
   $('#chain-filter')?.addEventListener('change',e=>{state.chain=e.target.value;state.marketPage=0;refreshMarketList();});
@@ -321,8 +267,6 @@ function bind() {
   bindMarkets();
   document.querySelectorAll('[data-example]').forEach(el=>el.addEventListener('click',()=>selectPool(examples.find(p=>p.id===el.dataset.example))));
   $('#manual-card')?.addEventListener('click',()=>selectPool(manualPool(state.selected.base??state.selected.apy,state.selected.reward??0)));
-<<<<<<< Updated upstream
-=======
   $('#refresh-receipts')?.addEventListener('click',()=>loadReceipts());
   $('#more-receipts')?.addEventListener('click',()=>loadReceipts({append:true}));
   $('#export-confirmed')?.addEventListener('click',()=>downloadJSON(state.lastSaved,`thehro-evidence-${state.lastSaved.entityKey.slice(2,10)}.json`));
@@ -330,7 +274,6 @@ function bind() {
   document.querySelectorAll('[data-export]').forEach(el=>el.addEventListener('click',()=>{const r=state.receipts.find(r=>r.key===el.dataset.export);if(r)downloadJSON(r,`thehro-receipt-${r.key.slice(2,10)}.json`);}));
   document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>copyText(el.dataset.copy,'Entity key copied.')));
   document.querySelectorAll('[data-delete]').forEach(el=>el.addEventListener('click',()=>deleteSaved(el.dataset.delete)));
->>>>>>> Stashed changes
   bindScenarioControls();
 }
 function bindScenarioControls() {
@@ -363,16 +306,10 @@ function bindMarkets() {
   document.querySelectorAll('[data-market-page]').forEach(el=>el.addEventListener('click',()=>{state.marketPage=Number(el.dataset.marketPage);refreshMarketList();$('#market-list')?.scrollIntoView({block:'start',behavior:'smooth'});}));
 }
 function refreshMarketList() { const node=$('#market-list');if(!node)return;node.innerHTML=marketListMarkup();decorate();bindMarkets(); }
-<<<<<<< Updated upstream
-function updateResults() {
-  if(!$('#results'))return;
-  $('#results').innerHTML=resultsMarkup();decorate();persist();
-=======
 function bindResults() { $('#save-result')?.addEventListener('click',e=>openSave(e.currentTarget)); }
 function updateResults() {
   if(!$('#results'))return;
   $('#results').innerHTML=resultsMarkup();decorate();bindResults();persist();
->>>>>>> Stashed changes
   clearTimeout(announceTimer);
   announceTimer=setTimeout(()=>{const node=$('#result-announcement');if(!node)return;try{const r=compare(inputs()),v=verdictCopy(r.advantage);node.textContent=`${v.caption} ${money(Math.abs(r.advantage))} ${v.unit} over ${state.inputs.days} days.`;}catch(e){node.textContent=e.message;}},900);
 }
@@ -382,11 +319,7 @@ function selectPool(pool,{focus}={}) {
   clearShareHash();render({focus:focus??'h1'});persist();window.scrollTo({top:0,behavior:'smooth'});
 }
 function navigate(view) {
-<<<<<<< Updated upstream
-  state.view=view;render({focus:'h1'});window.scrollTo({top:0,behavior:'smooth'});
-=======
   state.view=view;render({focus:'h1'});if(view==='receipts'&&state.wallet)loadReceipts();window.scrollTo({top:0,behavior:'smooth'});
->>>>>>> Stashed changes
 }
 
 function marketError(error) {
@@ -411,15 +344,6 @@ async function refreshMarketsInBackground() {
   }finally{marketsInFlight=false;}
 }
 
-<<<<<<< Updated upstream
-function openModal(name,opener) {
-  modalOpener=opener?.id?`#${CSS.escape(opener.id)}`:opener??null;
-  state.modal=name;renderModal();
-}
-function closeModal() {
-  if(!state.modal)return;
-  state.modal=null;$('#modal-root').innerHTML='';document.body.classList.remove('modal-open');
-=======
 function setWallet(address,provider) {
   providerCleanup();providerCleanup=()=>{};
   Object.assign(state,{wallet:address,provider:address?provider:null,receipts:[],receiptError:'',receiptsLoading:false,receiptOffset:0,receiptsMore:false,receiptsSkipped:0,lastTx:null,lastSaved:null});
@@ -495,16 +419,10 @@ function openModal(name,opener) {
 function closeModal() {
   if(state.busy||!state.modal)return;
   ++modalEpoch;state.modal=null;$('#modal-root').innerHTML='';document.body.classList.remove('modal-open');
->>>>>>> Stashed changes
   const target=typeof modalOpener==='string'?$(modalOpener):modalOpener?.isConnected?modalOpener:null;
   (target??$('h1'))?.focus({preventScroll:true});modalOpener=null;
 }
 function modalContent() {
-<<<<<<< Updated upstream
-  switch(state.modal){
-    case 'methodology': return `<span class="modal-kicker">TRANSPARENT BY DESIGN</span><h2 id="modal-title">The math, without the magic.</h2><p>APY is an effective annual rate. For a holding period of <b>d</b> days:</p><div class="formula">Stay = P × (1 + current APY)<sup>d/365</sup><br>Move = (P − cost) × (1 + target APY)<sup>d/365</sup><br>Extra gain = Move − Stay</div><p>Rates are converted from percentages. Break-even is when those two balances match. A lower or equal rate never recovers a positive switching cost.</p><ul class="assumption-list"><li>All switching costs are user-entered estimates, paid upfront. Itemized costs are summed.</li><li>Rates stay at the chosen basis (reported, 30-day mean, or your own) minus any assumed decline. The “What if” table re-runs the math at lower rates.</li><li>Reward APY is treated as equally reinvestable. Excluding rewards uses the base APY; base yield may also contain subsidies.</li><li>Taxes, lockups, liquidity limits, smart-contract risk and depegs are not modeled.</li><li>DeFiLlama retrieval time is not an onchain quote or a pool observation timestamp.</li></ul><p class="small-print">This is a scenario calculator, not a deposit recommendation.</p>`;
-    case 'import': return `<span class="modal-kicker">BRING A SCENARIO BACK</span><h2 id="modal-title">Import a comparison.</h2><p>Choose a Thehro JSON file exported earlier, or paste its contents. Everything is validated before it is used.</p><label class="field-label" for="import-file">JSON file</label><input class="modal-input" id="import-file" type="file" accept="application/json,.json"><label class="field-label" for="import-text">Or paste JSON</label><textarea class="modal-input" id="import-text" rows="6" spellcheck="false"></textarea><button id="import-submit" class="primary-button full">${icon('upload')}Import scenario</button><p id="import-error" class="inline-error" role="alert">${esc(state.importError)}</p>`;
-=======
   const here=encodeURIComponent(location.href);
   switch(state.modal){
     case 'methodology': return `<span class="modal-kicker">TRANSPARENT BY DESIGN</span><h2 id="modal-title">The math, without the magic.</h2><p>APY is an effective annual rate. For a holding period of <b>d</b> days:</p><div class="formula">Stay = P × (1 + current APY)<sup>d/365</sup><br>Move = (P − cost) × (1 + target APY)<sup>d/365</sup><br>Extra gain = Move − Stay</div><p>Rates are converted from percentages. Break-even is when those two balances match. A lower or equal rate never recovers a positive switching cost.</p><ul class="assumption-list"><li>All switching costs are user-entered estimates, paid upfront. Itemized costs are summed.</li><li>Rates stay at the chosen basis (reported, 30-day mean, or your own) minus any assumed decline. The “What if” table re-runs the math at lower rates.</li><li>Reward APY is treated as equally reinvestable. Excluding rewards uses the base APY; base yield may also contain subsidies.</li><li>Taxes, lockups, liquidity limits, smart-contract risk and depegs are not modeled.</li><li>DeFiLlama retrieval time is not an onchain quote or a pool observation timestamp.</li></ul><p class="small-print">This is a scenario calculator, not a deposit recommendation. Saved receipts preserve assumptions, not guarantees.</p>`;
@@ -516,22 +434,12 @@ function modalContent() {
       const d=state.saveDraft,busy=state.busy,connecting=state.connecting;
       return `<span class="modal-kicker">AN EXPIRING DECISION RECEIPT</span><h2 id="modal-title">Keep the reasoning.</h2><p>Save this scenario to Arkiv Rabdi. Reopen it from My receipts while it is active.</p><form id="receipt-form"><label class="field-label" for="receipt-name">Name this comparison</label><input class="modal-input" id="receipt-name" maxlength="100" required value="${esc(d.name)}" ${busy?'readonly':''}><label class="field-label" for="receipt-lifetime">Available for</label><select class="modal-input" id="receipt-lifetime" ${busy?'disabled':''}>${LIFETIMES.map(m=>`<option value="${m}" ${d.minutes===m?'selected':''}>${LIFETIME_LABELS[m]}</option>`).join('')}</select><div class="save-summary"><span>Rate source <strong>${esc(sourceLabel())}</strong></span><span>Target <strong>${pct(targetApy())}${state.excludeRewards?' (base only)':''}</strong></span><span>Network <strong>Arkiv Rabdi testnet</strong></span><span>Wallet <strong>${state.wallet?esc(shortAddress(state.wallet)):'Not connected'}</strong></span></div><p class="public-notice">${icon('info')}This publishes your scenario amount, inputs and wallet address. The lifetime starts when the transaction lands, not when you open your wallet. Expiry removes it from queries; it does not erase blockchain history.</p><button class="primary-button full" type="submit" ${busy||connecting?'disabled':''}>${icon(busy||connecting?'loader-circle':state.wallet?'bookmark':'wallet',busy||connecting?'spin':'')}${busy?'Confirm in your wallet, then wait…':connecting?'Waiting for your wallet…':state.wallet?'Save on Arkiv':'Connect wallet to continue'}</button><button type="button" id="save-local" class="outline-button full" ${busy?'disabled':''}>${icon('download')}Download as JSON instead</button><a class="faucet-link" href="https://hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Need test tGLM? Open the faucet ${icon('external-link')}</a><p id="save-error" class="inline-error" role="alert">${esc(state.saveError)}</p></form>`;
     }
->>>>>>> Stashed changes
   }
   return '';
 }
 function renderModal() {
   if(!state.modal)return;
   const hadFocus=document.activeElement?.closest?.('.modal')?document.activeElement.id:null;
-<<<<<<< Updated upstream
-  $('#modal-root').innerHTML=`<div class="modal-overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close icon-button" aria-label="Close dialog">${icon('x')}</button>${modalContent()}</section></div>`;
-  document.body.classList.add('modal-open');decorate();
-  $('.modal-close').addEventListener('click',closeModal);
-  $('.modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
-  $('#import-submit')?.addEventListener('click',importScenario);
-  const focusTarget=(hadFocus&&$(`#${CSS.escape(hadFocus)}`))||$('.modal input:not([readonly]), .modal select, .modal textarea, .modal button:not(.modal-close):not([disabled]), .modal a')||$('.modal-close');
-  focusTarget?.focus();
-=======
   $('#modal-root').innerHTML=`<div class="modal-overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close icon-button" aria-label="Close dialog" ${state.busy?'disabled':''}>${icon('x')}</button>${modalContent()}</section></div>`;
   document.body.classList.add('modal-open');decorate();
   $('.modal-close').addEventListener('click',closeModal);
@@ -590,7 +498,6 @@ async function deleteSaved(key) {
   try{const result=await removeReceipt(state.provider,owner,key);if(state.wallet===owner){state.lastTx=result.txHash;if(state.lastSaved?.entityKey===key)state.lastSaved=null;state.receipts=state.receipts.filter(r=>r.key!==key);notify('Receipt deleted from active Arkiv state.');}}
   catch(error){notify(friendlyError(error),'error');}
   finally{state.busy=false;render();if(state.wallet===owner)loadReceipts();}
->>>>>>> Stashed changes
 }
 
 async function importScenario() {
@@ -613,11 +520,7 @@ async function shareLink() {
 function clearShareHash() { if(location.hash.startsWith('#s='))history.replaceState(null,'',location.pathname+location.search); }
 async function copyText(text,message) { try{await navigator.clipboard.writeText(text);notify(message);}catch{notify('Clipboard is unavailable in this browser.','error');} }
 function downloadJSON(value,filename) {
-<<<<<<< Updated upstream
-  const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
-=======
   const url=URL.createObjectURL(new Blob([JSON.stringify(value,(k,v)=>typeof v==='bigint'?String(v):v,2)],{type:'application/json'}));
->>>>>>> Stashed changes
   const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
@@ -625,15 +528,12 @@ document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&state.modal){closeModal();return;}
   if(event.key==='Tab'&&state.modal){const els=[...document.querySelectorAll('.modal button:not([disabled]),.modal input:not([disabled]),.modal select:not([disabled]),.modal textarea,.modal a[href]')];const first=els[0],last=els.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}
 });
-<<<<<<< Updated upstream
-=======
 setInterval(()=>{
   if(state.view!=='receipts'||!state.receipts.length)return;
   for(const r of state.receipts){const node=document.querySelector(`[data-countdown="${CSS.escape(r.key)}"]`);if(node)node.textContent=expiryLabel(r);}
   const due=state.receipts.some(r=>r.estimatedExpiresAt!=null&&r.estimatedExpiresAt<Date.now()-5000);
   if(due&&!state.receiptsLoading&&!state.busy&&Date.now()-lastAutoRefresh>20000){lastAutoRefresh=Date.now();loadReceipts();}
 },1000);
->>>>>>> Stashed changes
 setInterval(()=>{if(!document.hidden)loadMarkets({manual:false});},MARKET_REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&state.fetchedAt&&Date.now()-state.fetchedAt>=MARKET_REFRESH_MS)loadMarkets({manual:false});
