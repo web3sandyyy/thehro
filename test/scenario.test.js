@@ -1,17 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-<<<<<<< Updated upstream
-import { examples, filterPools, manualPool, poolLink, poolWarnings } from '../src/data.js';
-import { effectiveRate, cleanScenario, restoreScenario, parseScenario, encodeScenario, decodeScenario } from '../src/scenario.js';
-import { readDraft, writeDraft, clearDraft, DRAFT_KEY } from '../src/storage.js';
-=======
 import { stringToHex } from 'viem';
 import { examples, filterPools, manualPool, poolLink, poolWarnings } from '../src/data.js';
 import { effectiveRate, cleanScenario, restoreScenario, parseScenario, encodeScenario, decodeScenario } from '../src/scenario.js';
 import { readDraft, writeDraft, clearDraft, DRAFT_KEY } from '../src/storage.js';
 import { readReceiptPage } from '../src/arkiv.js';
 import { discoverWallets, mobileWalletLinks } from '../src/wallets.js';
->>>>>>> Stashed changes
 import { compare } from '../src/math.js';
 
 const boosted = examples[1];
@@ -94,8 +88,6 @@ test('drafts persist locally and ignore corrupt storage', () => {
   clearDraft(storage);
   assert.equal(store.has(DRAFT_KEY), false);
 });
-<<<<<<< Updated upstream
-=======
 
 function fakeClient(entities, timing) {
   const query = { from:()=>query, ownedBy:()=>query, orderBy:()=>query, limit:()=>query, offset:()=>query, fetch:async()=>({entities}) };
@@ -140,4 +132,3 @@ test('wallet discovery lists EIP-6963 providers and the injected fallback once',
   assert.equal(links[0].href, 'https://metamask.app.link/dapp/thehro.app/?a=1');
   assert.ok(links[1].href.includes(encodeURIComponent('https://thehro.app/?a=1')));
 });
->>>>>>> Stashed changes
