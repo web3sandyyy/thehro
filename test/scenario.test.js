@@ -1,8 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+<<<<<<< Updated upstream
 import { examples, filterPools, manualPool, poolLink, poolWarnings } from '../src/data.js';
 import { effectiveRate, cleanScenario, restoreScenario, parseScenario, encodeScenario, decodeScenario } from '../src/scenario.js';
 import { readDraft, writeDraft, clearDraft, DRAFT_KEY } from '../src/storage.js';
+=======
+import { stringToHex } from 'viem';
+import { examples, filterPools, manualPool, poolLink, poolWarnings } from '../src/data.js';
+import { effectiveRate, cleanScenario, restoreScenario, parseScenario, encodeScenario, decodeScenario } from '../src/scenario.js';
+import { readDraft, writeDraft, clearDraft, DRAFT_KEY } from '../src/storage.js';
+import { readReceiptPage } from '../src/arkiv.js';
+import { discoverWallets, mobileWalletLinks } from '../src/wallets.js';
+>>>>>>> Stashed changes
 import { compare } from '../src/math.js';
 
 const boosted = examples[1];
@@ -85,3 +94,50 @@ test('drafts persist locally and ignore corrupt storage', () => {
   clearDraft(storage);
   assert.equal(store.has(DRAFT_KEY), false);
 });
+<<<<<<< Updated upstream
+=======
+
+function fakeClient(entities, timing) {
+  const query = { from:()=>query, ownedBy:()=>query, orderBy:()=>query, limit:()=>query, offset:()=>query, fetch:async()=>({entities}) };
+  return { select:()=>query, getBlockTiming:async()=>timing };
+}
+function entity(receipt, expiresAt, key='0x'+'a'.repeat(64)) {
+  return { $key:key, $owner:'0x0000000000000000000000000000000000000001', $expiresAt:expiresAt,
+    name:{value:receipt.name}, source:{value:receipt.source.type}, savedAt:{value:BigInt(receipt.savedAt)}, receipt:{value:stringToHex(JSON.stringify(receipt))} };
+}
+const owner = '0x0000000000000000000000000000000000000001';
+
+test('chain expiry, not the pre-signing timestamp, decides receipt visibility', async () => {
+  // A v1 receipt whose JSON expiresAt is long past (slow wallet approval) but whose entity is still live.
+  const stale = { ...scenario(), version:1, savedAt:1000, expiresAt:2000 };
+  delete stale.lifetimeMinutes;
+  const timing = { currentBlock:100n, currentBlockTime:1_900_000_000, blockDuration:2 };
+  const page = await readReceiptPage(owner, { client:fakeClient([entity(stale, 160n)], timing) });
+  assert.equal(page.receipts.length, 1);
+  assert.equal(page.receipts[0].expiresAtBlock, '160');
+  assert.equal(page.receipts[0].estimatedExpiresAt, (1_900_000_000 + 60*2) * 1000);
+  const expired = await readReceiptPage(owner, { client:fakeClient([entity(scenario(), 100n)], timing) });
+  assert.equal(expired.receipts.length, 0);
+});
+
+test('receipt reader skips entities whose attributes disagree with their payload', async () => {
+  const s = scenario(), bad = entity(s, 500n);
+  bad.name = { value:'Something else' };
+  const page = await readReceiptPage(owner, { client:fakeClient([bad, entity(s, 500n, '0x'+'b'.repeat(64))], { currentBlock:1n, currentBlockTime:0, blockDuration:2 }) });
+  assert.equal(page.receipts.length, 1);
+  assert.equal(page.skipped, 1);
+});
+
+test('wallet discovery lists EIP-6963 providers and the injected fallback once', () => {
+  const listeners = {};
+  const injected = { request:async()=>[] }, announced = { request:async()=>[] };
+  const host = { ethereum:injected, addEventListener:(n,f)=>listeners[n]=f, removeEventListener:()=>{},
+    dispatchEvent:()=>listeners['eip6963:announceProvider']({ detail:{ info:{uuid:'u1',name:'Rabby',icon:'javascript:alert(1)'}, provider:announced } }) };
+  const list = discoverWallets(host).list();
+  assert.deepEqual(list.map(w=>w.name), ['Rabby','Browser wallet']);
+  assert.equal(list[0].icon, null);
+  const links = mobileWalletLinks({ href:'https://thehro.app/?a=1', host:'thehro.app', pathname:'/', search:'?a=1' });
+  assert.equal(links[0].href, 'https://metamask.app.link/dapp/thehro.app/?a=1');
+  assert.ok(links[1].href.includes(encodeURIComponent('https://thehro.app/?a=1')));
+});
+>>>>>>> Stashed changes

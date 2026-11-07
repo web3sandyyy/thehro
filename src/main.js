@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { createIcons, ArrowUpRight, ArrowRight, ArrowLeftRight, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Leaf, SlidersHorizontal, CircleDollarSign, TrendingUp, Download, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, TriangleAlert } from 'lucide';
 import { compare, chartPoints, outcome, FEE_KEYS } from './math.js';
 import { examples, fetchPools, prettyProject, filterPools, manualPool, poolLink, poolWarnings } from './data.js';
@@ -6,25 +7,55 @@ import { readDraft, writeDraft, clearDraft } from './storage.js';
 import './style.css';
 
 const iconSet = { ArrowUpRight, ArrowRight, ArrowLeftRight, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Leaf, SlidersHorizontal, CircleDollarSign, TrendingUp, Download, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, TriangleAlert };
+=======
+import { createIcons, ArrowUpRight, ArrowRight, ArrowLeftRight, Wallet, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Bookmark, Leaf, SlidersHorizontal, FileClock, CircleDollarSign, TrendingUp, Download, Trash2, Copy, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, Smartphone, TriangleAlert } from 'lucide';
+import { compare, chartPoints, outcome, FEE_KEYS, LIFETIMES } from './math.js';
+import { examples, fetchPools, prettyProject, filterPools, manualPool, poolLink, poolWarnings } from './data.js';
+import { connectWallet, saveReceipt, readReceiptPage, removeReceipt, explorer, chain, RECEIPT_SCHEMA } from './arkiv.js';
+import { effectiveRate, cleanScenario, restoreScenario, parseScenario, encodeScenario, decodeScenario } from './scenario.js';
+import { discoverWallets, mobileWalletLinks, isMobile } from './wallets.js';
+import { readDraft, writeDraft, clearDraft } from './storage.js';
+import './style.css';
+
+const iconSet = { ArrowUpRight, ArrowRight, ArrowLeftRight, Wallet, ChevronDown, RefreshCw, Search, Check, X, Clock3, Info, ExternalLink, Bookmark, Leaf, SlidersHorizontal, FileClock, CircleDollarSign, TrendingUp, Download, Trash2, Copy, LoaderCircle, Layers, Share2, Upload, Pencil, RotateCcw, Smartphone, TriangleAlert };
+>>>>>>> Stashed changes
 const $ = (selector) => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = (name, cls='') => `<i data-lucide="${name}" class="${cls}" aria-hidden="true"></i>`;
 const money = value => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(value);
 const compact = value => new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:1}).format(value);
 const pct = value => `${value.toFixed(2)}%`;
+<<<<<<< Updated upstream
 const PAGE_SIZE = 40;
 const FEE_LABELS = {withdrawal:'Withdrawal',gas:'Gas',bridge:'Bridge',entry:'Entry / deposit',slippage:'Slippage'};
+=======
+const shortAddress = value => `${value.slice(0,6)}…${value.slice(-4)}`;
+const PAGE_SIZE = 40, RECEIPT_PAGE = 24;
+const FEE_LABELS = {withdrawal:'Withdrawal',gas:'Gas',bridge:'Bridge',entry:'Entry / deposit',slippage:'Slippage'};
+const LIFETIME_LABELS = {2:'2 minutes — quick expiry demo',15:'15 minutes',30:'30 minutes',60:'1 hour',1440:'1 day',10080:'7 days'};
+>>>>>>> Stashed changes
 const DEFAULT_INPUTS = {amount:5000,currentApy:4.2,days:30,cost:18};
 
 const state = {
   view:'markets', inputs:{...DEFAULT_INPUTS}, selected:examples[1],
   excludeRewards:false, rateMode:'reported', rateHaircut:0, fees:null,
   pools:[], fetchedAt:null, loading:false, dataError:'', search:'', chain:'All networks', sort:'tvl', marketPage:0,
+<<<<<<< Updated upstream
   modal:null, toast:null, restoredSource:null, selectedFetchedAt:null,
   remember:false, importError:'',
 };
 let toastTimeout, announceTimer, persistTimer, modalOpener=null, marketsInFlight=false;
 const MARKET_REFRESH_MS=5*60*1000;
+=======
+  wallet:null, provider:null, connecting:false, receipts:[], receiptsLoading:false, receiptError:'', receiptsLoadedAt:null,
+  receiptOffset:0, receiptsMore:false, receiptsSkipped:0,
+  busy:false, modal:null, toast:null, lastTx:null, lastSaved:null, restoredSource:null, selectedFetchedAt:null,
+  remember:false, saveDraft:{name:'',minutes:30}, saveError:'', importError:'',
+};
+let toastTimeout, announceTimer, persistTimer, pendingHint, readEpoch=0, connectionEpoch=0, modalEpoch=0, modalOpener=null, providerCleanup=()=>{}, lastAutoRefresh=0, marketsInFlight=false;
+const MARKET_REFRESH_MS=5*60*1000;
+const walletDiscovery=discoverWallets();
+>>>>>>> Stashed changes
 document.body.insertAdjacentHTML('beforeend','<div id="modal-root"></div><div id="toast" aria-live="polite"></div>');
 
 function decorate() { createIcons({icons:iconSet,attrs:{'stroke-width':1.65}}); }
@@ -42,10 +73,17 @@ function sourceLabel() {
   return `Retrieved ${new Date(source.fetchedAt).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})} · ${Math.max(0,Math.floor((Date.now()-source.fetchedAt)/60000))}m ago`;
 }
 function defaultName() { return `${state.selected.manual?'My target':prettyProject(state.selected.project)} · ${state.inputs.days} days`; }
+<<<<<<< Updated upstream
 function buildScenario(name=defaultName()) {
   return cleanScenario({ version:2, name, inputs:inputs(), source:provenance(), pool:{...state.selected},
     excludeRewards:state.excludeRewards, rateMode:state.rateMode, rateHaircut:state.rateHaircut, fees:state.fees,
     savedAt:Date.now(), lifetimeMinutes:30 });
+=======
+function buildScenario(name=defaultName(), minutes=state.saveDraft.minutes) {
+  return cleanScenario({ version:2, name, inputs:inputs(), source:provenance(), pool:{...state.selected},
+    excludeRewards:state.excludeRewards, rateMode:state.rateMode, rateHaircut:state.rateHaircut, fees:state.fees,
+    savedAt:Date.now(), lifetimeMinutes:minutes });
+>>>>>>> Stashed changes
 }
 function applyScenario(scenario) {
   const r=restoreScenario(scenario);
@@ -70,9 +108,11 @@ function render({focus}={}) {
   const active=document.activeElement;
   const focusSelector=focus??(active?.id?`#${CSS.escape(active.id)}`:active?.dataset?.amount?`[data-amount="${active.dataset.amount}"]`:active?.dataset?.days?`[data-days="${active.dataset.days}"]`:active?.dataset?.view?`.nav [data-view="${active.dataset.view}"]`:null);
   $('#app').innerHTML=`
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="header"><div class="header-inner">
       <a class="brand" href="#" aria-label="Thehro home"><span class="brand-icon">${icon('arrow-up-right')}</span>thehro<span class="brand-dot">.</span></a>
       <nav class="nav" aria-label="Main navigation">
+<<<<<<< Updated upstream
         ${[['compare','Compare'],['markets','Markets']].map(([v,label])=>`<button data-view="${v}" class="${state.view===v?'active':''}" ${state.view===v?'aria-current="page"':''}>${label}${v==='markets'?' <span class="nav-dot"></span>':''}</button>`).join('')}
       </nav>
       <span></span>
@@ -80,6 +120,15 @@ function render({focus}={}) {
     <main class="shell" id="main">
       ${state.view==='compare'?comparePage():marketsPage()}
       <footer class="footer"><span><span class="footer-mark">✳</span> Built for a little more clarity.</span><div><button id="methodology">How the math works ${icon('arrow-up-right')}</button></div></footer>
+=======
+        ${[['compare','Compare'],['markets','Markets'],['receipts','My receipts']].map(([v,label])=>`<button data-view="${v}" class="${state.view===v?'active':''}" ${state.view===v?'aria-current="page"':''}>${label}${v==='markets'?' <span class="nav-dot"></span>':''}</button>`).join('')}
+      </nav>
+      <button class="wallet-button" id="connect" ${state.connecting?'aria-busy="true"':''}>${icon(state.connecting?'loader-circle':'wallet',state.connecting?'spin':'')}<span>${state.wallet?esc(shortAddress(state.wallet)):state.connecting?'Check your wallet…':'Connect wallet'}</span></button>
+    </div></header>
+    <main class="shell" id="main">
+      ${state.view==='compare'?comparePage():state.view==='markets'?marketsPage():receiptsPage()}
+      <footer class="footer"><span><span class="footer-mark">✳</span> Built for a little more clarity.</span><div><button id="methodology">How the math works ${icon('arrow-up-right')}</button><span class="footer-divider"></span><span>Receipts on <a href="https://arkiv.network" target="_blank" rel="noopener noreferrer">[ ARKIV ]</a></span></div></footer>
+>>>>>>> Stashed changes
     </main>`;
   decorate(); bind(); renderToast();
   if(focusSelector&&!state.modal)$(focusSelector)?.focus({preventScroll:true});
@@ -140,7 +189,12 @@ function comparePage() {
       ${poolDetails()}
       <div class="target-bottom"><div id="rate-breakdown"><span class="legend-dot base"></span>Base ${s.base==null?'unknown':pct(s.base)} <span class="legend-dot reward"></span>Rewards ${s.reward==null?'unknown':pct(s.reward)}</div><label class="toggle"><input id="exclude-rewards" type="checkbox" ${state.excludeRewards?'checked':''} ${s.base==null?'disabled':''}><span class="toggle-track"></span>Exclude rewards</label></div>${rateControls()}</div>
       <div id="results">${resultsMarkup()}</div><div id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<<<<<<< Updated upstream
     </section></div>`;
+=======
+    </section></div>
+    <div class="bottom-note"><span class="pill-icon">${icon('file-clock')}</span><div><h3>Good decisions deserve a timestamp.</h3><p>Save your inputs and rates as a wallet-owned receipt on Arkiv, or export them as a file without a wallet.</p></div><button id="save-bottom" class="outline-button">Save comparison ${icon('bookmark')}</button></div>`;
+>>>>>>> Stashed changes
 }
 
 function verdictCopy(advantage) {
@@ -162,7 +216,7 @@ function sensitivityMarkup() {
 function resultsMarkup() {
   let result; try { result=compare(inputs()); } catch(error) { return `<div class="validation-error" role="alert">${icon('info')}${esc(error.message)}</div>`; }
   const {verdict,caption,unit}=verdictCopy(result.advantage),wins=verdict==='move',tie=verdict==='tie';
-  return `<div class="verdict-panel ${wins?'move-wins':'stay-wins'}"><div class="verdict-top"><span>${icon(wins?'trending-up':'leaf')}${tie?'A CLOSE CALL':wins?'THE MOVE ADDS UP':'PATIENCE PAYS'}</span><span class="horizon-tag">OVER ${state.inputs.days} DAYS</span></div><div class="verdict-main"><div><h2>${caption}</h2><p><strong>${money(Math.abs(result.advantage))}</strong><span>${unit}</span></p></div><div class="verdict-art" aria-hidden="true"><span class="art-circle"></span><span class="art-arrow">${wins?'↗':'↔'}</span></div></div><div class="verdict-bottom"><span>At the assumed rates below. Before taxes and changes in risk.</span></div></div>
+  return `<div class="verdict-panel ${wins?'move-wins':'stay-wins'}"><div class="verdict-top"><span>${icon(wins?'trending-up':'leaf')}${tie?'A CLOSE CALL':wins?'THE MOVE ADDS UP':'PATIENCE PAYS'}</span><span class="horizon-tag">OVER ${state.inputs.days} DAYS</span></div><div class="verdict-main"><div><h2>${caption}</h2><p><strong>${money(Math.abs(result.advantage))}</strong><span>${unit}</span></p></div><div class="verdict-art" aria-hidden="true"><span class="art-circle"></span><span class="art-arrow">${wins?'↗':'↔'}</span></div></div><div class="verdict-bottom"><span>At the assumed rates below. Before taxes and changes in risk.</span><button id="save-result">${icon('bookmark')} Save receipt</button></div></div>
     <div class="metric-grid"><div><span>Stay where you are ${icon('info')}</span><strong>${money(result.stay)}</strong><small>projected earnings</small></div><div><span>Make the move ${icon('arrow-up-right')}</span><strong>${money(result.move)}</strong><small>projected earnings after costs</small></div><div><span>Break-even ${icon('clock-3')}</span><strong>${result.breakEven===null?'Never':result.breakEven>3650?'10+ years':result.breakEven===0?'Immediate':`${Math.ceil(result.breakEven)} <em>days</em>`}</strong><small>${result.breakEven===null?'at these assumed rates':'until moving catches up'}</small></div></div>
     <div class="chart-panel"><div class="chart-heading"><div><h3>Let time tell the story</h3><p>Projected earnings, after switching costs</p></div><div class="chart-legend"><span><i class="stay-line"></i>Stay</span><span><i class="move-line"></i>Move</span></div></div>${chartMarkup(result)}<div class="chart-footnote">${icon('info')}Effective target ${pct(targetApy())}${state.rateMode==='mean'?' (30-day mean)':''}${state.rateHaircut?`, after a ${state.rateHaircut}% assumed decline`:''}. ${state.excludeRewards?'Reward incentives excluded.':'Reward incentives included when reported.'} USDC assumed to hold $1.</div></div>
     ${sensitivityMarkup()}`;
@@ -209,9 +263,39 @@ function marketListMarkup() {
     <p class="table-note"><span>${filtered.length===state.pools.length?`All ${state.pools.length} matching pools.`:`${filtered.length} of ${state.pools.length} pools match your filters.`}</span><a href="https://defillama.com/yields" target="_blank" rel="noopener noreferrer">Source: DeFiLlama ${icon('external-link')}</a></p>`;
 }
 
+<<<<<<< Updated upstream
 function bind() {
   $('.brand').addEventListener('click',e=>{e.preventDefault();navigate('compare');});
   document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.view)));
+=======
+function expiryLabel(r) {
+  if(r.estimatedExpiresAt==null)return `Expires at block ${r.expiresAtBlock}`;
+  const left=r.estimatedExpiresAt-Date.now();
+  if(left<=0)return 'Expiring now…';
+  const m=Math.ceil(left/60000);
+  return m<60?`~${m}m left`:m<1440?`~${Math.floor(m/60)}h ${m%60}m left`:`~${Math.floor(m/1440)}d ${Math.floor(m%1440/60)}h left`;
+}
+function receiptsPage() {
+  const active=state.receipts;
+  return `<section class="page-intro compact-intro"><div><div class="eyebrow"><span></span> WALLET-OWNED. TIME-BOUND.</div><h1 tabindex="-1">A receipt for your <em>reasoning.</em></h1><p>Your inputs, rates and assumptions. Saved on Arkiv, until their time is up.</p></div><button class="outline-button" id="refresh-receipts" ${!state.wallet||state.receiptsLoading||state.busy?'disabled':''}>${icon('refresh-cw',state.receiptsLoading?'spin':'')}Refresh receipts</button></section>
+    <div class="receipt-explainer"><span class="receipt-explainer-icon">${icon('file-clock')}</span><div><h3>Financial assumptions shouldn’t live forever.</h3><p>Receipts last 2 minutes to 7 days and leave Arkiv’s query results when the network expires them. Countdowns are estimates from block timing; the chain decides. Receipts are public, signed records of your scenario—not verified market quotes. Expiry does not erase historical blockchain data.</p></div><span class="network-badge"><i></i> Arkiv Rabdi</span></div>
+    ${state.receiptError?`<div class="error-banner" role="alert">${icon('info')}${esc(state.receiptError)}</div>`:''}
+    ${state.lastSaved&&state.lastSaved.owner===state.wallet?`<div class="receipt-evidence"><div>${icon('check')}<strong>Confirmed on Arkiv</strong></div><p>Entity <code>${esc(state.lastSaved.entityKey)}</code> · expires at block ${esc(state.lastSaved.expiresAtBlock)} · <a href="${explorer}/tx/${esc(state.lastSaved.txHash)}" target="_blank" rel="noopener noreferrer">transaction ${esc(shortAddress(state.lastSaved.txHash))} ${icon('external-link')}</a></p>${state.lastSaved.readBack?'':'<p class="muted-note">Waiting for the receipt to appear in query results…</p>'}<button class="outline-button" id="export-confirmed">${icon('download')}Download receipt + transaction evidence</button></div>`:''}
+    ${!state.wallet?`<div class="receipts-empty"><div class="empty-symbol">${icon('wallet')}</div><h2>Your comparisons, in your hands.</h2><p>Connect a wallet to save and read receipts.<br>The calculator, drafts and JSON export work without one.</p><button class="primary-button" id="connect-receipts">${icon('wallet')}Connect wallet</button><a href="https://hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Get test tGLM for saving ${icon('arrow-up-right')}</a></div>`:state.receiptsLoading&&!active.length?`<div class="receipts-empty">${icon('loader-circle','spin')}<h3>Reading your receipts from Arkiv…</h3></div>`:!active.length?`<div class="receipts-empty"><div class="empty-symbol">${icon('file-clock')}</div><h2>A clean slate.</h2><p>${state.receiptError?'The network could not be reached. Retry to check your receipts.':'No active receipts found for this wallet. Save a comparison to create one.'}</p><button class="primary-button" data-view="compare">Make a comparison ${icon('arrow-right')}</button></div>`:`<div class="receipt-grid">${active.map(receiptMarkup).join('')}</div><p class="table-note">Read directly from Arkiv for ${esc(state.wallet)} · Last queried ${esc(new Date(state.receiptsLoadedAt).toLocaleTimeString())}</p>`}
+    ${state.wallet&&state.receiptsMore?`<button class="outline-button full" id="more-receipts" ${state.receiptsLoading?'disabled':''}>${state.receiptsLoading?'Reading…':'Load more receipts'}</button>`:''}${state.receiptsSkipped?`<p class="table-note">${state.receiptsSkipped} receipt(s) failed validation and were skipped.</p>`:''}
+    ${state.lastTx&&!state.lastSaved?`<div class="transaction-note">${icon('check')}Last confirmed transaction <a href="${explorer}/tx/${esc(state.lastTx)}" target="_blank" rel="noopener noreferrer">${shortAddress(state.lastTx)} ${icon('external-link')}</a></div>`:''}`;
+}
+function receiptMarkup(r) {
+  const result=compare(r.inputs),{verdict}=verdictCopy(result.advantage);
+  return `<article class="receipt-card"><div class="receipt-top"><span>${r.source.type==='example'?'EXAMPLE SCENARIO':r.source.type==='manual'?'MANUAL SCENARIO':'REPORTED RATES'}</span><span>${icon('clock-3')}<span data-countdown="${esc(r.key)}">${esc(expiryLabel(r))}</span></span></div><h3>${esc(r.name)}</h3><p>${money(r.inputs.amount)} · ${r.inputs.days} days · ${money(r.inputs.cost)} costs</p><div class="receipt-number">${money(Math.abs(result.advantage))}<span>${verdict==='tie'?'difference · effectively even':verdict==='move'?'more by moving':'more by staying'}</span></div><div class="receipt-rates">${pct(r.inputs.currentApy)} ${icon('arrow-right')} ${pct(r.inputs.targetApy)}${r.pool?.reward>0&&!r.excludeRewards?` <span class="muted">incl. ${pct(r.pool.reward)} rewards</span>`:''}</div><div class="receipt-actions"><button data-restore="${esc(r.key)}">Reopen ${icon('arrow-up-right')}</button><button data-export="${esc(r.key)}" aria-label="Download receipt">${icon('download')}</button><button data-copy="${esc(r.key)}" aria-label="Copy entity key">${icon('copy')}</button><button data-delete="${esc(r.key)}" aria-label="Delete receipt" ${state.busy?'disabled':''}>${icon('trash-2')}</button></div></article>`;
+}
+
+function bind() {
+  $('.brand').addEventListener('click',e=>{e.preventDefault();navigate('compare');});
+  document.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.view)));
+  $('#connect')?.addEventListener('click',e=>connect(e.currentTarget));
+  $('#connect-receipts')?.addEventListener('click',e=>connect(e.currentTarget));
+>>>>>>> Stashed changes
   $('#methodology')?.addEventListener('click',e=>openModal('methodology',e.currentTarget));
   for(const [id,key] of [['amount','amount'],['current-apy','currentApy'],['cost','cost'],['days','days'],['custom-days','days']]) {
     $(`#${id}`)?.addEventListener('input',event=>{
@@ -225,6 +309,11 @@ function bind() {
   document.querySelectorAll('[data-amount]').forEach(el=>el.addEventListener('click',()=>{state.inputs.amount=Number(el.dataset.amount);render();persist();}));
   document.querySelectorAll('[data-days]').forEach(el=>el.addEventListener('click',()=>{state.inputs.days=Number(el.dataset.days);render();persist();}));
   $('#exclude-rewards')?.addEventListener('change',e=>{state.excludeRewards=e.target.checked;if(state.excludeRewards)state.rateMode='reported';render();persist();});
+<<<<<<< Updated upstream
+=======
+  $('#save-bottom')?.addEventListener('click',e=>openSave(e.currentTarget));
+  bindResults();
+>>>>>>> Stashed changes
   $('#load-markets')?.addEventListener('click',loadMarkets);
   $('#market-search')?.addEventListener('input',e=>{state.search=e.target.value;state.marketPage=0;refreshMarketList();});
   $('#chain-filter')?.addEventListener('change',e=>{state.chain=e.target.value;state.marketPage=0;refreshMarketList();});
@@ -232,6 +321,16 @@ function bind() {
   bindMarkets();
   document.querySelectorAll('[data-example]').forEach(el=>el.addEventListener('click',()=>selectPool(examples.find(p=>p.id===el.dataset.example))));
   $('#manual-card')?.addEventListener('click',()=>selectPool(manualPool(state.selected.base??state.selected.apy,state.selected.reward??0)));
+<<<<<<< Updated upstream
+=======
+  $('#refresh-receipts')?.addEventListener('click',()=>loadReceipts());
+  $('#more-receipts')?.addEventListener('click',()=>loadReceipts({append:true}));
+  $('#export-confirmed')?.addEventListener('click',()=>downloadJSON(state.lastSaved,`thehro-evidence-${state.lastSaved.entityKey.slice(2,10)}.json`));
+  document.querySelectorAll('[data-restore]').forEach(el=>el.addEventListener('click',()=>restoreReceipt(el.dataset.restore)));
+  document.querySelectorAll('[data-export]').forEach(el=>el.addEventListener('click',()=>{const r=state.receipts.find(r=>r.key===el.dataset.export);if(r)downloadJSON(r,`thehro-receipt-${r.key.slice(2,10)}.json`);}));
+  document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>copyText(el.dataset.copy,'Entity key copied.')));
+  document.querySelectorAll('[data-delete]').forEach(el=>el.addEventListener('click',()=>deleteSaved(el.dataset.delete)));
+>>>>>>> Stashed changes
   bindScenarioControls();
 }
 function bindScenarioControls() {
@@ -264,9 +363,16 @@ function bindMarkets() {
   document.querySelectorAll('[data-market-page]').forEach(el=>el.addEventListener('click',()=>{state.marketPage=Number(el.dataset.marketPage);refreshMarketList();$('#market-list')?.scrollIntoView({block:'start',behavior:'smooth'});}));
 }
 function refreshMarketList() { const node=$('#market-list');if(!node)return;node.innerHTML=marketListMarkup();decorate();bindMarkets(); }
+<<<<<<< Updated upstream
 function updateResults() {
   if(!$('#results'))return;
   $('#results').innerHTML=resultsMarkup();decorate();persist();
+=======
+function bindResults() { $('#save-result')?.addEventListener('click',e=>openSave(e.currentTarget)); }
+function updateResults() {
+  if(!$('#results'))return;
+  $('#results').innerHTML=resultsMarkup();decorate();bindResults();persist();
+>>>>>>> Stashed changes
   clearTimeout(announceTimer);
   announceTimer=setTimeout(()=>{const node=$('#result-announcement');if(!node)return;try{const r=compare(inputs()),v=verdictCopy(r.advantage);node.textContent=`${v.caption} ${money(Math.abs(r.advantage))} ${v.unit} over ${state.inputs.days} days.`;}catch(e){node.textContent=e.message;}},900);
 }
@@ -276,7 +382,11 @@ function selectPool(pool,{focus}={}) {
   clearShareHash();render({focus:focus??'h1'});persist();window.scrollTo({top:0,behavior:'smooth'});
 }
 function navigate(view) {
+<<<<<<< Updated upstream
   state.view=view;render({focus:'h1'});window.scrollTo({top:0,behavior:'smooth'});
+=======
+  state.view=view;render({focus:'h1'});if(view==='receipts'&&state.wallet)loadReceipts();window.scrollTo({top:0,behavior:'smooth'});
+>>>>>>> Stashed changes
 }
 
 function marketError(error) {
@@ -301,6 +411,7 @@ async function refreshMarketsInBackground() {
   }finally{marketsInFlight=false;}
 }
 
+<<<<<<< Updated upstream
 function openModal(name,opener) {
   modalOpener=opener?.id?`#${CSS.escape(opener.id)}`:opener??null;
   state.modal=name;renderModal();
@@ -308,19 +419,111 @@ function openModal(name,opener) {
 function closeModal() {
   if(!state.modal)return;
   state.modal=null;$('#modal-root').innerHTML='';document.body.classList.remove('modal-open');
+=======
+function setWallet(address,provider) {
+  providerCleanup();providerCleanup=()=>{};
+  Object.assign(state,{wallet:address,provider:address?provider:null,receipts:[],receiptError:'',receiptsLoading:false,receiptOffset:0,receiptsMore:false,receiptsSkipped:0,lastTx:null,lastSaved:null});
+  ++readEpoch;
+  if(address&&provider?.on){
+    const onAccounts=accounts=>{const next=accounts?.[0]??null;if(next?.toLowerCase()===state.wallet?.toLowerCase())return;if(state.modal&&!state.busy)closeModal();setWallet(next,provider);render();if(next)notify('Wallet account changed. Showing receipts for the new account.');if(next&&state.view==='receipts')loadReceipts();};
+    provider.on('accountsChanged',onAccounts);
+    providerCleanup=()=>provider.removeListener?.('accountsChanged',onAccounts);
+  }
+}
+async function connectWith(provider) {
+  const epoch=++connectionEpoch;
+  state.connecting=true;render();
+  clearTimeout(pendingHint);
+  pendingHint=setTimeout(()=>{if(epoch===connectionEpoch&&state.connecting)notify('Waiting for your wallet. Open or unlock it to approve the connection, or click the wallet button to cancel.');},4000);
+  try{
+    const address=await connectWallet(provider);
+    if(epoch!==connectionEpoch)return null;
+    setWallet(address,provider);notify('Wallet connected. Only Arkiv testnet writes require a transaction.');
+    return address;
+  }catch(error){if(epoch===connectionEpoch)notify(friendlyError(error),'error');return null;}
+  finally{if(epoch===connectionEpoch){clearTimeout(pendingHint);state.connecting=false;render();if(state.wallet&&state.view==='receipts')loadReceipts();}}
+}
+async function connect(opener) {
+  if(state.connecting){++connectionEpoch;clearTimeout(pendingHint);state.connecting=false;render();notify('Connection request cancelled here. Dismiss any pending prompt in your wallet.');return null;}
+  if(state.wallet){openModal('wallet',opener);return state.wallet;}
+  const wallets=walletDiscovery.list();
+  if(!wallets.length){openModal('no-wallet',opener);return null;}
+  if(wallets.length>1){openModal('wallet-picker',opener);return null;}
+  return connectWith(wallets[0].provider);
+}
+async function loadReceipts({append=false}={}) {
+  if(!state.wallet)return;const address=state.wallet,epoch=++readEpoch;
+  state.receiptsLoading=true;state.receiptError='';render();
+  try{
+    const page=await readReceiptPage(address,{offset:append?state.receiptOffset:0,limit:RECEIPT_PAGE});
+    if(epoch!==readEpoch||state.wallet!==address)return;
+    state.receipts=append?[...state.receipts,...page.receipts.filter(r=>!state.receipts.some(x=>x.key===r.key))]:page.receipts;
+    state.receiptOffset=page.nextOffset;state.receiptsMore=page.hasMore;state.receiptsSkipped=(append?state.receiptsSkipped:0)+page.skipped;state.receiptsLoadedAt=Date.now();
+    if(state.lastSaved&&state.receipts.some(r=>r.key===state.lastSaved.entityKey))state.lastSaved.readBack=true;
+  }
+  catch(error){if(epoch===readEpoch){state.receiptError=friendlyError(error);if(!append)state.receipts=[];}}
+  finally{if(epoch===readEpoch){state.receiptsLoading=false;render();}}
+}
+async function readBackSaved(entityKey) {
+  for(const delay of [0,3000,6000,12000]){
+    if(delay)await new Promise(r=>setTimeout(r,delay));
+    if(state.lastSaved?.entityKey!==entityKey)return;
+    await loadReceipts();
+    if(state.lastSaved?.readBack){notify('Receipt read back from Arkiv.');return;}
+  }
+  if(state.lastSaved?.entityKey===entityKey)notify('The receipt is confirmed but not yet visible in query results. Refresh in a moment.','error');
+}
+function openSave(opener) {
+  try{compare(inputs());}catch(e){notify(e.message,'error');return;}
+  state.saveDraft={name:defaultName(),minutes:state.saveDraft.minutes||30};state.saveError='';
+  openModal('save',opener);
+}
+function friendlyError(error) {
+  const message=`${error?.shortMessage??''} ${error?.message??''}`;
+  if(error?.code===4001||/rejected|denied|cancel/i.test(message))return 'Request cancelled in your wallet. Nothing was saved.';
+  if(error?.code===-32002||/already pending/i.test(message))return 'Your wallet already has a pending request. Open your wallet to finish or reject it.';
+  if(/insufficient funds/i.test(message))return 'Your wallet needs test tGLM on Arkiv Rabdi. Use the faucet link and try again.';
+  if(/429|rate limit/i.test(message))return 'Arkiv is rate limiting requests. Wait a minute and try again.';
+  if(/timeout|timed out/i.test(message))return 'Arkiv took too long to respond. Check your connection and try again.';
+  return (error?.shortMessage||error?.message||'Something went wrong. Please try again.').slice(0,260);
+}
+
+function openModal(name,opener) {
+  modalOpener=opener?.id?`#${CSS.escape(opener.id)}`:opener??null;
+  ++modalEpoch;state.modal=name;renderModal();
+}
+function closeModal() {
+  if(state.busy||!state.modal)return;
+  ++modalEpoch;state.modal=null;$('#modal-root').innerHTML='';document.body.classList.remove('modal-open');
+>>>>>>> Stashed changes
   const target=typeof modalOpener==='string'?$(modalOpener):modalOpener?.isConnected?modalOpener:null;
   (target??$('h1'))?.focus({preventScroll:true});modalOpener=null;
 }
 function modalContent() {
+<<<<<<< Updated upstream
   switch(state.modal){
     case 'methodology': return `<span class="modal-kicker">TRANSPARENT BY DESIGN</span><h2 id="modal-title">The math, without the magic.</h2><p>APY is an effective annual rate. For a holding period of <b>d</b> days:</p><div class="formula">Stay = P × (1 + current APY)<sup>d/365</sup><br>Move = (P − cost) × (1 + target APY)<sup>d/365</sup><br>Extra gain = Move − Stay</div><p>Rates are converted from percentages. Break-even is when those two balances match. A lower or equal rate never recovers a positive switching cost.</p><ul class="assumption-list"><li>All switching costs are user-entered estimates, paid upfront. Itemized costs are summed.</li><li>Rates stay at the chosen basis (reported, 30-day mean, or your own) minus any assumed decline. The “What if” table re-runs the math at lower rates.</li><li>Reward APY is treated as equally reinvestable. Excluding rewards uses the base APY; base yield may also contain subsidies.</li><li>Taxes, lockups, liquidity limits, smart-contract risk and depegs are not modeled.</li><li>DeFiLlama retrieval time is not an onchain quote or a pool observation timestamp.</li></ul><p class="small-print">This is a scenario calculator, not a deposit recommendation.</p>`;
     case 'import': return `<span class="modal-kicker">BRING A SCENARIO BACK</span><h2 id="modal-title">Import a comparison.</h2><p>Choose a Thehro JSON file exported earlier, or paste its contents. Everything is validated before it is used.</p><label class="field-label" for="import-file">JSON file</label><input class="modal-input" id="import-file" type="file" accept="application/json,.json"><label class="field-label" for="import-text">Or paste JSON</label><textarea class="modal-input" id="import-text" rows="6" spellcheck="false"></textarea><button id="import-submit" class="primary-button full">${icon('upload')}Import scenario</button><p id="import-error" class="inline-error" role="alert">${esc(state.importError)}</p>`;
+=======
+  const here=encodeURIComponent(location.href);
+  switch(state.modal){
+    case 'methodology': return `<span class="modal-kicker">TRANSPARENT BY DESIGN</span><h2 id="modal-title">The math, without the magic.</h2><p>APY is an effective annual rate. For a holding period of <b>d</b> days:</p><div class="formula">Stay = P × (1 + current APY)<sup>d/365</sup><br>Move = (P − cost) × (1 + target APY)<sup>d/365</sup><br>Extra gain = Move − Stay</div><p>Rates are converted from percentages. Break-even is when those two balances match. A lower or equal rate never recovers a positive switching cost.</p><ul class="assumption-list"><li>All switching costs are user-entered estimates, paid upfront. Itemized costs are summed.</li><li>Rates stay at the chosen basis (reported, 30-day mean, or your own) minus any assumed decline. The “What if” table re-runs the math at lower rates.</li><li>Reward APY is treated as equally reinvestable. Excluding rewards uses the base APY; base yield may also contain subsidies.</li><li>Taxes, lockups, liquidity limits, smart-contract risk and depegs are not modeled.</li><li>DeFiLlama retrieval time is not an onchain quote or a pool observation timestamp.</li></ul><p class="small-print">This is a scenario calculator, not a deposit recommendation. Saved receipts preserve assumptions, not guarantees.</p>`;
+    case 'wallet': return `<span class="modal-kicker">CONNECTED WALLET</span><h2 id="modal-title">Your wallet. Your receipts.</h2><p class="address-text">${esc(state.wallet)}</p><p>Writes use test tGLM on Arkiv Rabdi. Your private keys stay in your wallet.</p><a class="primary-button full" href="https://hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Open testnet faucet ${icon('external-link')}</a><button id="disconnect" class="outline-button full">Disconnect from Thehro</button>`;
+    case 'wallet-picker': return `<span class="modal-kicker">CHOOSE A WALLET</span><h2 id="modal-title">Which wallet should sign?</h2><p>Several wallets are installed in this browser. Thehro only asks for your address and, when you save, an Arkiv testnet transaction.</p><div class="wallet-list">${walletDiscovery.list().map(w=>`<button class="outline-button full" data-wallet="${esc(w.id)}">${w.icon?`<img src="${esc(w.icon)}" alt="" width="20" height="20">`:icon('wallet')}${esc(w.name)}</button>`).join('')}</div>`;
+    case 'no-wallet': return `<span class="modal-kicker">NO WALLET FOUND</span><h2 id="modal-title">${isMobile()?'Open Thehro in your wallet app.':'Install a browser wallet.'}</h2><p>${isMobile()?'Mobile browsers don’t include a wallet. Open this page inside a wallet’s built-in browser to save receipts.':'Saving receipts needs an EVM wallet extension such as MetaMask, Rabby or Coinbase Wallet. The calculator and JSON export work without one.'}</p>${isMobile()?`<div class="wallet-list">${mobileWalletLinks(location).map(l=>`<a class="outline-button full" href="${esc(l.href)}">${icon('smartphone')}Open in ${esc(l.name)}</a>`).join('')}</div>`:`<a class="primary-button full" href="https://ethereum.org/en/wallets/find-wallet/" target="_blank" rel="noopener noreferrer">Find a wallet ${icon('external-link')}</a>`}<button id="copy-page-link" class="outline-button full" data-link="${esc(decodeURIComponent(here))}">${icon('copy')}Copy this page’s link</button>`;
+    case 'import': return `<span class="modal-kicker">BRING A SCENARIO BACK</span><h2 id="modal-title">Import a comparison.</h2><p>Choose a Thehro JSON file (a draft export or a downloaded receipt), or paste its contents. Everything is validated before it is used.</p><label class="field-label" for="import-file">JSON file</label><input class="modal-input" id="import-file" type="file" accept="application/json,.json"><label class="field-label" for="import-text">Or paste JSON</label><textarea class="modal-input" id="import-text" rows="6" spellcheck="false"></textarea><button id="import-submit" class="primary-button full">${icon('upload')}Import scenario</button><p id="import-error" class="inline-error" role="alert">${esc(state.importError)}</p>`;
+    case 'save': {
+      const d=state.saveDraft,busy=state.busy,connecting=state.connecting;
+      return `<span class="modal-kicker">AN EXPIRING DECISION RECEIPT</span><h2 id="modal-title">Keep the reasoning.</h2><p>Save this scenario to Arkiv Rabdi. Reopen it from My receipts while it is active.</p><form id="receipt-form"><label class="field-label" for="receipt-name">Name this comparison</label><input class="modal-input" id="receipt-name" maxlength="100" required value="${esc(d.name)}" ${busy?'readonly':''}><label class="field-label" for="receipt-lifetime">Available for</label><select class="modal-input" id="receipt-lifetime" ${busy?'disabled':''}>${LIFETIMES.map(m=>`<option value="${m}" ${d.minutes===m?'selected':''}>${LIFETIME_LABELS[m]}</option>`).join('')}</select><div class="save-summary"><span>Rate source <strong>${esc(sourceLabel())}</strong></span><span>Target <strong>${pct(targetApy())}${state.excludeRewards?' (base only)':''}</strong></span><span>Network <strong>Arkiv Rabdi testnet</strong></span><span>Wallet <strong>${state.wallet?esc(shortAddress(state.wallet)):'Not connected'}</strong></span></div><p class="public-notice">${icon('info')}This publishes your scenario amount, inputs and wallet address. The lifetime starts when the transaction lands, not when you open your wallet. Expiry removes it from queries; it does not erase blockchain history.</p><button class="primary-button full" type="submit" ${busy||connecting?'disabled':''}>${icon(busy||connecting?'loader-circle':state.wallet?'bookmark':'wallet',busy||connecting?'spin':'')}${busy?'Confirm in your wallet, then wait…':connecting?'Waiting for your wallet…':state.wallet?'Save on Arkiv':'Connect wallet to continue'}</button><button type="button" id="save-local" class="outline-button full" ${busy?'disabled':''}>${icon('download')}Download as JSON instead</button><a class="faucet-link" href="https://hub.arkiv.network/faucet" target="_blank" rel="noopener noreferrer">Need test tGLM? Open the faucet ${icon('external-link')}</a><p id="save-error" class="inline-error" role="alert">${esc(state.saveError)}</p></form>`;
+    }
+>>>>>>> Stashed changes
   }
   return '';
 }
 function renderModal() {
   if(!state.modal)return;
   const hadFocus=document.activeElement?.closest?.('.modal')?document.activeElement.id:null;
+<<<<<<< Updated upstream
   $('#modal-root').innerHTML=`<div class="modal-overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close icon-button" aria-label="Close dialog">${icon('x')}</button>${modalContent()}</section></div>`;
   document.body.classList.add('modal-open');decorate();
   $('.modal-close').addEventListener('click',closeModal);
@@ -328,6 +531,66 @@ function renderModal() {
   $('#import-submit')?.addEventListener('click',importScenario);
   const focusTarget=(hadFocus&&$(`#${CSS.escape(hadFocus)}`))||$('.modal input:not([readonly]), .modal select, .modal textarea, .modal button:not(.modal-close):not([disabled]), .modal a')||$('.modal-close');
   focusTarget?.focus();
+=======
+  $('#modal-root').innerHTML=`<div class="modal-overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close icon-button" aria-label="Close dialog" ${state.busy?'disabled':''}>${icon('x')}</button>${modalContent()}</section></div>`;
+  document.body.classList.add('modal-open');decorate();
+  $('.modal-close').addEventListener('click',closeModal);
+  $('.modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+  $('#disconnect')?.addEventListener('click',()=>{setWallet(null,null);closeModal();render();notify('Disconnected. Your receipts remain on Arkiv until they expire.');});
+  $('#receipt-name')?.addEventListener('input',e=>{state.saveDraft.name=e.target.value;});
+  $('#receipt-lifetime')?.addEventListener('change',e=>{state.saveDraft.minutes=Number(e.target.value);});
+  $('#receipt-form')?.addEventListener('submit',submitReceipt);
+  $('#save-local')?.addEventListener('click',()=>{try{downloadJSON(buildScenario(state.saveDraft.name.trim()||defaultName()),'thehro-scenario.json');notify('Scenario downloaded. Import it any time; nothing was published.');}catch(e){state.saveError=e.message;renderModal();}});
+  document.querySelectorAll('[data-wallet]').forEach(el=>el.addEventListener('click',()=>{const w=walletDiscovery.list().find(w=>w.id===el.dataset.wallet);closeModal();if(w)connectWith(w.provider);}));
+  $('#copy-page-link')?.addEventListener('click',e=>copyText(e.currentTarget.dataset.link,'Link copied. Paste it into your wallet’s browser.'));
+  $('#import-submit')?.addEventListener('click',importScenario);
+  const focusTarget=(hadFocus&&$(`#${CSS.escape(hadFocus)}`))||$('.modal input:not([readonly]), .modal select, .modal textarea, .modal button:not(.modal-close):not([disabled]), .modal a')||$('.modal-close');
+  focusTarget?.focus();
+}
+async function submitReceipt(event) {
+  event.preventDefault();if(state.busy||state.connecting)return;
+  const name=state.saveDraft.name.trim(), minutes=state.saveDraft.minutes, token=modalEpoch;
+  if(!name){state.saveError='Give this comparison a name.';renderModal();return;}
+  state.saveError='';
+  if(!state.wallet){
+    const wallets=walletDiscovery.list();
+    if(wallets.length!==1){closeModal();openModal(wallets.length?'wallet-picker':'no-wallet');return;}
+    const connecting=connectWith(wallets[0].provider);renderModal();
+    await connecting;
+    if(token===modalEpoch&&state.modal==='save')renderModal();
+    return;
+  }
+  let receipt;
+  try{receipt=buildScenario(name,minutes);}catch(e){state.saveError=e.message;renderModal();return;}
+  const owner=state.wallet,provider=state.provider;
+  state.busy=true;renderModal();
+  try{
+    const result=await saveReceipt(provider,owner,receipt,minutes);
+    if(state.wallet!==owner){notify('Receipt confirmed for your previous wallet account.');return;}
+    state.lastTx=result.txHash;
+    state.lastSaved={owner,entityKey:result.entityKey,txHash:result.txHash,expiresAtBlock:String(result.expiresAt),chainId:chain.id,schema:RECEIPT_SCHEMA,explorerTx:`${explorer}/tx/${result.txHash}`,confirmedAt:Date.now(),receipt,readBack:false};
+    state.busy=false;closeModal();state.view='receipts';render({focus:'h1'});
+    notify('Receipt confirmed on Arkiv. Reading it back from the network…');
+    readBackSaved(result.entityKey);
+  }
+  catch(error){if(token===modalEpoch&&state.modal==='save'){state.saveError=friendlyError(error);}else notify(friendlyError(error),'error');}
+  finally{if(state.busy){state.busy=false;if(state.modal==='save')renderModal();render();}}
+}
+function restoreReceipt(key) {
+  const receipt=state.receipts.find(r=>r.key===key);
+  if(!receipt){notify('That receipt is no longer loaded. Refresh your receipts.','error');return;}
+  try{applyScenario(receipt);}catch(e){notify(`This receipt could not be reopened: ${e.message}`,'error');return;}
+  state.view='compare';render({focus:'h1'});persist();window.scrollTo({top:0,behavior:'smooth'});
+  notify(state.selected.snapshot?'Restored the saved rate. This older receipt has no rate breakdown.':'Restored saved assumptions. These are not freshly fetched rates.');
+}
+async function deleteSaved(key) {
+  if(state.busy||!state.wallet)return;
+  if(!confirm('Delete this receipt from active Arkiv state? This needs one wallet transaction. Blockchain history is not erased.'))return;
+  const owner=state.wallet;state.busy=true;render();
+  try{const result=await removeReceipt(state.provider,owner,key);if(state.wallet===owner){state.lastTx=result.txHash;if(state.lastSaved?.entityKey===key)state.lastSaved=null;state.receipts=state.receipts.filter(r=>r.key!==key);notify('Receipt deleted from active Arkiv state.');}}
+  catch(error){notify(friendlyError(error),'error');}
+  finally{state.busy=false;render();if(state.wallet===owner)loadReceipts();}
+>>>>>>> Stashed changes
 }
 
 async function importScenario() {
@@ -350,7 +613,11 @@ async function shareLink() {
 function clearShareHash() { if(location.hash.startsWith('#s='))history.replaceState(null,'',location.pathname+location.search); }
 async function copyText(text,message) { try{await navigator.clipboard.writeText(text);notify(message);}catch{notify('Clipboard is unavailable in this browser.','error');} }
 function downloadJSON(value,filename) {
+<<<<<<< Updated upstream
   const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
+=======
+  const url=URL.createObjectURL(new Blob([JSON.stringify(value,(k,v)=>typeof v==='bigint'?String(v):v,2)],{type:'application/json'}));
+>>>>>>> Stashed changes
   const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
@@ -358,6 +625,15 @@ document.addEventListener('keydown',event=>{
   if(event.key==='Escape'&&state.modal){closeModal();return;}
   if(event.key==='Tab'&&state.modal){const els=[...document.querySelectorAll('.modal button:not([disabled]),.modal input:not([disabled]),.modal select:not([disabled]),.modal textarea,.modal a[href]')];const first=els[0],last=els.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}
 });
+<<<<<<< Updated upstream
+=======
+setInterval(()=>{
+  if(state.view!=='receipts'||!state.receipts.length)return;
+  for(const r of state.receipts){const node=document.querySelector(`[data-countdown="${CSS.escape(r.key)}"]`);if(node)node.textContent=expiryLabel(r);}
+  const due=state.receipts.some(r=>r.estimatedExpiresAt!=null&&r.estimatedExpiresAt<Date.now()-5000);
+  if(due&&!state.receiptsLoading&&!state.busy&&Date.now()-lastAutoRefresh>20000){lastAutoRefresh=Date.now();loadReceipts();}
+},1000);
+>>>>>>> Stashed changes
 setInterval(()=>{if(!document.hidden)loadMarkets({manual:false});},MARKET_REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&state.fetchedAt&&Date.now()-state.fetchedAt>=MARKET_REFRESH_MS)loadMarkets({manual:false});
