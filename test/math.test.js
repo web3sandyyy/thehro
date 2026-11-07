@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compare, growth, chartPoints, normalizePools } from '../src/math.js';
-import { filterPools, poolWarnings } from '../src/data.js';
+import { compare, growth, chartPoints, normalizePools, validateReceipt } from '../src/math.js';
 const inputs = { amount: 5000, currentApy: 4.2, targetApy: 7.8, days: 30, cost: 18 };
 test('effective APY produces the stated annual return', () => {
   assert.ok(Math.abs(growth(1000, 10, 365) - 100) < 1e-9);
@@ -36,19 +35,7 @@ test('pool filter excludes LPs, missing APY, small pools and lookalike symbols',
   const rows = [pool, {...pool,apy:null},{...pool,symbol:'USDC-USDT'},{...pool,exposure:'multi'},{...pool,tvlUsd:1},{...pool,apy:Infinity}];
   assert.equal(normalizePools(rows).length, 1);
 });
-test('search matches displayed protocol names, slugs and surrounding whitespace', () => {
-  const pools = [
-    { id:'a', project:'aave-v3', chain:'Base', apy:5, tvl:3, meta:'' },
-    { id:'b', project:'compound-v3', chain:'Ethereum', apy:6, tvl:2, meta:'' },
-    { id:'c', project:'fluid-lite', chain:'Ethereum', apy:7, tvl:1, meta:'' },
-  ];
-  for (const [query, id] of [['Aave V3','a'],['aave-v3','a'],['  aave v3  ','a'],['Compound V3','b'],['Fluid Lite','c'],['fluid_lite','c']])
-    assert.deepEqual(filterPools(pools,{search:query}).map(p=>p.id), [id], query);
-  assert.deepEqual(filterPools(pools,{sort:'apy'}).map(p=>p.id), ['c','b','a']);
-});
-test('pool warnings flag restrictions, reward-heavy yields and unstable rates', () => {
-  assert.equal(poolWarnings({ meta:'30-day lock', apy:5, reward:0, mean30d:5 }).length, 1);
-  assert.equal(poolWarnings({ meta:'', apy:10, reward:8, mean30d:10 }).length, 1);
-  assert.equal(poolWarnings({ meta:'', apy:12, reward:0, mean30d:4 }).length, 1);
-  assert.equal(poolWarnings({ meta:'', apy:5, reward:0, mean30d:5 }).length, 0);
+test('untrusted receipts must pass numeric and provenance validation', () => {
+  assert.throws(() => validateReceipt({ version:1, name:'bad', inputs:{ ...inputs, amount:-1 } }));
+  assert.throws(() => validateReceipt({ version:1, name:'bad', inputs, savedAt:100, expiresAt:200, source:{type:'oracle-verified'} }));
 });

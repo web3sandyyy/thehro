@@ -49,5 +49,37 @@ export function normalizePools(data) {
     .sort((a,b) => b.tvl - a.tvl);
 }
 
+export function validateReceipt(value) {
+  if (!value || ![1,2].includes(value.version) || typeof value.name !== 'string' || !value.name.trim() || value.name.length > 100 || new TextEncoder().encode(value.name).length > 128) throw new Error('Receipt names must be nonempty and at most 128 UTF-8 bytes.');
+  if (!value.inputs || typeof value.inputs !== 'object') throw new Error('Missing comparison inputs.');
+  assertInputs(value.inputs);
+  if (!validTimestamp(value.savedAt)) throw new Error('Invalid scenario timestamp.');
+  if (value.version===1 && (!validTimestamp(value.expiresAt) || value.expiresAt <= value.savedAt)) throw new Error('Invalid receipt lifetime.');
+  if (value.version===2 && !LIFETIMES.includes(value.lifetimeMinutes)) throw new Error('Invalid receipt lifetime.');
+  if (!['manual', 'example', 'defillama'].includes(value.source?.type)) throw new Error('Invalid data source.');
+  if (value.source.type === 'defillama' && (!validTimestamp(value.source.fetchedAt) || !validPoolId(value.source.poolId))) throw new Error('Missing market provenance.');
+  if (value.rateHaircut !== undefined && (!Number.isFinite(value.rateHaircut) || value.rateHaircut < 0 || value.rateHaircut > 100)) throw new Error('Rate reduction must be between 0 and 100%.');
+  if (value.rateMode !== undefined && !['reported','mean'].includes(value.rateMode)) throw new Error('Invalid rate mode.');
+  if (value.excludeRewards !== undefined && typeof value.excludeRewards !== 'boolean') throw new Error('Invalid reward setting.');
+  if (value.pool) validatePoolSnapshot(value.pool);
+  if (value.version===2 && !value.pool) throw new Error('Missing pool snapshot.');
+  if (value.fees != null) {
+    if (FEE_KEYS.some(k=>!Number.isFinite(value.fees[k]) || value.fees[k]<0)) throw new Error('Invalid fee breakdown.');
+    if (Math.abs(FEE_KEYS.reduce((n,k)=>n+value.fees[k],0)-value.inputs.cost)>1e-6) throw new Error('Fee breakdown does not match total cost.');
+  }
+  if (new TextEncoder().encode(JSON.stringify(value)).length>65536) throw new Error('Scenario exceeds the 64 KB limit.');
+  return value;
+}
+
+export const LIFETIMES=[2,15,30,60,1440,10080];
+export const FEE_KEYS=['withdrawal','gas','bridge','entry','slippage'];
 export const validRate=value=>Number.isFinite(value)&&value>=0&&value<=1000;
+export const validTimestamp=value=>Number.isSafeInteger(value)&&value>0&&value<=8640000000000000;
+export const validPoolId=value=>typeof value==='string'&&/^[a-z0-9-]{8,160}$/i.test(value);
 export const outcome=advantage=>Math.abs(advantage)<0.005?'tie':advantage>0?'move':'stay';
+export function validatePoolSnapshot(pool) {
+  if (!pool || !validPoolId(pool.id) || typeof pool.project!=='string' || !pool.project.trim() || pool.project.length>100 || typeof pool.chain!=='string' || pool.chain.length>80 || pool.symbol!=='USDC' || !validRate(pool.apy)) throw new Error('Invalid pool snapshot.');
+  for (const k of ['base','reward','mean30d']) if (pool[k]!=null&&!validRate(pool[k])) throw new Error('Invalid pool rate breakdown.');
+  if (pool.meta!=null&&(typeof pool.meta!=='string'||pool.meta.length>200)) throw new Error('Invalid pool description.');
+  return pool;
+}

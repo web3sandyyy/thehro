@@ -21,8 +21,11 @@ export function filterPools(pools,{search='',chain='All networks',sort='tvl'}={}
   return pools.filter(p=>(chain==='All networks'||p.chain===chain)&&normalized(`${p.project} ${prettyProject(p.project)} ${p.chain} ${p.meta??''}`).includes(query))
     .sort((a,b)=>sort==='apy'?b.apy-a.apy:sort==='base'?(b.base??-1)-(a.base??-1):sort==='name'?prettyProject(a.project).localeCompare(prettyProject(b.project)):b.tvl-a.tvl);
 }
+export function manualPool(base=6, reward=0) {
+  return { id:'manual-target', project:'Manual target', chain:'Your estimate', symbol:'USDC', apy:base+reward, base, reward, mean30d:null, tvl:null, meta:'', manual:true };
+}
 export function poolLink(pool) {
-  return pool.example?null:`https://defillama.com/yields/pool/${encodeURIComponent(pool.id)}`;
+  return pool.example||pool.manual||pool.snapshot?null:`https://defillama.com/yields/pool/${encodeURIComponent(pool.id)}`;
 }
 const RESTRICTED=/lock|vest|kyc|accredit|qualified|whitelist|permission|institution|fund|non-us|tranche/i;
 export function poolWarnings(pool) {
